@@ -1,12 +1,14 @@
 fe06497acaf4f45999925d348c2605f9 *COPYING
-82f5052b2dcc40f27775a3c6219f3341 *DESCRIPTION
+c7c2e19911bcd7847eec6a425ab32eac *DESCRIPTION
 d3c02e47aed9191a98c7fe55622323ce *NAMESPACE
-cad3c461d1bfd791710dda20ad553077 *R/lqmm.R
+7585b89782aa81ca2e8475c9be90e466 *R/lqmm.R
+d89a176dddb1f4f26b570deb7463b410 *build/vignette.rds
 dfb988e33aac10f31d1045ebad9f59a7 *data/Orthodont.rda
 881c8ca691cb6647cc01d9ba3fbccadb *data/labor.rda
 b81339ec0fcf8300acacc96748ae3501 *inst/CITATION
-db2c533bb76a66780ba04a83d86e7130 *inst/ChangeLog
-9af769542f6eab6b2dc128c9d3dc7e0a *inst/doc/lqmm.pdf
+5e529dad10127dd6666d1974dd9f21e8 *inst/ChangeLog
+8658adb80c39c0145b307ab61c0bc5b3 *inst/doc/lqmm.pdf
+8e13f88355cf580a4912996232b0d716 *inst/doc/lqmm.pdf.asis
 26ca90aa23ed55fc1228d6c222ba6de9 *man/Orthodont.Rd
 8b4e83efa0ea03f7d6096a3f38ad3413 *man/VarCorr.Rd
 101f3dc07aace36665a7b453f5f8cfce *man/boot.Rd
@@ -26,7 +28,7 @@ ed992c7ed0b663eb83c61eb9b365d87f *man/logLik.lqmm.Rd
 b9cc9826d8ed3c3f74f57c0761ee07a3 *man/lqm.fit.gs.Rd
 e40a2cfc5207c6f62ced1ea9d35f3a68 *man/lqmControl.Rd
 eea7bee6537483e770382a8b1c07d964 *man/lqmm-internal.Rd
-469cdac8cc37c80e15ee125f7ef0a9cf *man/lqmm-package.Rd
+f3077729c7593fbc50737e440d4beaa9 *man/lqmm-package.Rd
 3f358253d0fa00e2762b2b5929747e94 *man/lqmm.Rd
 7ed33bd6552116dd581393f66e176242 *man/lqmm.fit.df.Rd
 20c60edb250a05188e20759849d48b74 *man/lqmm.fit.gs.Rd
@@ -49,3 +51,4 @@ ee0bceedf3de76d95159275083236c09 *man/summary.lqm.Rd
 e4216b5df30a51c19f45373b6036cb4e *man/summary.lqmm.Rd
 11f4af17985a27e22b7201ced3dbfbb4 *src/Makevars
 29e2d1118ce1d6afcc5590b9a04f46bb *src/lqmm.c
+8e13f88355cf580a4912996232b0d716 *vignettes/lqmm.pdf.asis
