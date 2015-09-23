@@ -48,7 +48,7 @@ An object of class \code{list} containing the following components:
 }
 
 \references{
-Bottai M, Orsini N, Geraci M (2014). A Gradient Search Maximization Algorithm for the Asymmetric Laplace Likelihood, Journal of Statistical Computation and Simulation. \url{http://dx.doi.org/10.1080/00949655.2014.908879}. Forthcoming.
+Bottai M, Orsini N, Geraci M (2014). A Gradient Search Maximization Algorithm for the Asymmetric Laplace Likelihood, Journal of Statistical Computation and Simulation, 85, 1919-1925.
 }
 
 \author{

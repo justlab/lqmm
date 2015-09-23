@@ -7,13 +7,15 @@
 Summary method for class \code{lqm}.}
 
 \usage{
-\method{summary}{lqm}(object, alpha = 0.05, covariance = FALSE, ...)
+\method{summary}{lqm}(object, method = "boot", alpha = 0.05, covariance = FALSE, ...)
 }
 
 \arguments{
   \item{object}{
 an object of \code{\link{class}} \code{lqm}}
 
+  \item{method}{
+specifies the method used to compute standard errors: "boot" for bootstrap (default), "nid" for large sample approximations under \emph{nid} assumptions.}
   \item{alpha}{
 significance level.
 }
@@ -33,6 +35,13 @@ an object of class \code{summary.lqm}. The function \code{summary.lqm} computes 
 
 \item{Cov}{the covariance matrix obtained from the bootstrapped estimates (if \code{covariance = TRUE}).}
 \item{tTable}{a matrix with estimates, standard errors, etc.}
+}
+
+\source{
+The code for the "nid" method has been adapted from the function \code{summary.rq} in package \code{quantreg}. It depends on the function \code{bandwidth.rq}. 
+
+Roger Koenker (2015). quantreg: Quantile Regression. R package version 5.19. \url{http://CRAN.R-project.org/package=quantreg}
+
 }
 
 \author{
