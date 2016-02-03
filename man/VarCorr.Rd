@@ -9,7 +9,7 @@ Extract Variance-Covariance Matrix
 This function extracts the variance-covariance matrix of the random effects from a fitted \code{lqmm} object.
 }
 \usage{
-\method{VarCorr}{lqmm}(x, sigma = NULL, rdig = NULL)
+\method{VarCorr}{lqmm}(x, sigma = NULL, ...)
 }
 
 \arguments{
@@ -17,7 +17,11 @@ This function extracts the variance-covariance matrix of the random effects from
 an object of \code{\link{class}} "lqmm".
 }
 
- \item{sigma, rdig}{
+ \item{sigma}{
+not used.
+}
+
+ \item{...}{
 not used.
 }
 

@@ -74,3 +74,9 @@ Version 1.5.2 (September 21, 2015)
 - New function predint.lqmm to calculate prediction intervals in lqmm
 - Replaced ChangeLog with NEWS (which is more appropriate)
 - Acknowledgements: thanks to Nathan Pace for reporting bugs and other issues
+
+=============================================
+
+Version 1.5.3 (January 28, 2016)
+
+- Updated function VarCorr for compatibility with nlme 3.1-123

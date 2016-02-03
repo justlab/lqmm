@@ -609,7 +609,7 @@ covHandling <- function(theta, n, cov_name, quad_type){
 return(sigma)	
 }
 
-VarCorr.lqmm <- function(x, sigma = NULL, rdig = NULL){
+VarCorr.lqmm <- function(x, sigma = NULL, ...){
 
 tau <- x$tau
 nq <- length(tau)
