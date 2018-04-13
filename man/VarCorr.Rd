@@ -34,7 +34,7 @@ This function returns the variance or the variance-covariance matrix of the rand
 \references{
 Higham N (2002). Computing the Nearest Correlation Matrix - A Problem from Finance. IMA Journal of Numerical Analysis, 22, 329-343.
 
-Pinheiro J, Bates D, DebRoy S, Sarkar D and R Core Team (2014). nlme: Linear and Nonlinear Mixed Effects Models. R package version 3.1-117, \url{http://CRAN.R-project.org/package=nlme}.
+Pinheiro J, Bates D, DebRoy S, Sarkar D and R Core Team (2014). nlme: Linear and Nonlinear Mixed Effects Models. R package version 3.1-117, \url{https://CRAN.R-project.org/package=nlme}.
 }
 
 \author{

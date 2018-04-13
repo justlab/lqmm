@@ -67,36 +67,34 @@ return(val)
 "createLaguerre" <- function(rule, q, k)
 {
 
-odd <- (k %% 2) > 0
-QUAD <- NULL
+	laguerre <- function(k){
+		odd <- (k %% 2) > 0
+			if(odd)
+				{val <- gauss.quad(n = (k - 1)/2, kind = "laguerre");
+				val$nodes <- c(-rev(val$nodes),0,val$nodes);
+				val$weights <- c(rev(val$weights),0,val$weights)}
+			else {val <- gauss.quad(n = k/2, kind = "laguerre");
+				val$nodes <- c(-rev(val$nodes),val$nodes)
+				val$weights <- c(rev(val$weights),val$weights)
+				}
+		return(val)
+	}
 
 if(rule == "product"){
-	if(odd)
-		{QUAD <- gauss.quad(n = (k - 1)/2, kind = "laguerre");
-		QUAD$nodes <- c(-rev(QUAD$nodes),0,QUAD$nodes)}
-	else
-		{QUAD <- gauss.quad(n = k/2, kind = "laguerre");
-		QUAD$nodes <- c(-rev(QUAD$nodes),QUAD$nodes)}
-	QUAD$weights <- dal(QUAD$nodes, mu = 0, sigma = 1, tau = 0.5, log = FALSE)
+	QUAD <- laguerre(k)
 	QUAD$nodes <- permutations(n = k, r = q, v = QUAD$nodes, set = FALSE, repeats.allowed = TRUE);
 	QUAD$weights <- apply(permutations(n = k, r = q, v = QUAD$weights, set = FALSE, repeats.allowed = TRUE), 1, prod)
-}	
+}
+
 
 if(rule == "sparse"){
-	if(odd)
-		{QUAD <- createSparseGrid(function(k) gauss.quad(n = k, kind = "laguerre"), dimension = q, k = (k - 1)/2, sym = FALSE);
-		QUAD$nodes <- rbind(-QUAD$nodes,rep(0,q),QUAD$nodes);
-		QUAD$weights <- c(QUAD$weights,dal(rep(0,q), mu = 0, sigma = 1, tau = 0.5, log = FALSE)^q,QUAD$weights)}
-	else
-		{QUAD <- createSparseGrid(function(k) gauss.quad(n = k, kind = "laguerre"), dimension = q, k = k/2, sym = FALSE);
-		QUAD$nodes <- rbind(-QUAD$nodes,QUAD$nodes);
-		QUAD$weights <- c(QUAD$weights,QUAD$weights)}
+	QUAD <- suppressWarnings(createSparseGrid(laguerre, dimension = q, k = k, sym = TRUE))
+	QUAD$weights <- QUAD$weights*2
 }
 
 return(QUAD)
 
 }
-
 
 "quad" <- function(q, k, type = c("normal","robust"), rule = 1){
 
@@ -170,19 +168,16 @@ return(QUAD)
 
 if(length(theta) != (p + m)) stop("Check length theta")
 
-ans = .C("ll_h_R", theta = as.double(theta), as.double(x), as.double(y), as.double(z), as.double(weights), as.double(Tq), as.double(V), as.double(W),	as.double(sigma), as.single(tau), as.integer(p), as.integer(q), as.integer(m), as.integer(M),
-		as.integer(N), as.integer(Kq), as.integer(minn-1), as.integer(maxn), loglik = double(1), PACKAGE = "lqmm")
+ans = .C("C_ll_h", theta = as.double(theta), as.double(x), as.double(y), as.double(z), as.double(weights), as.double(Tq), as.double(V), as.double(W),	as.double(sigma), as.single(tau), as.integer(p), as.integer(q), as.integer(m), as.integer(M), as.integer(N), as.integer(Kq), as.integer(minn-1), as.integer(maxn), loglik = double(1))#, PACKAGE = "lqmm")
 
 ans$loglik
 }
-
 
 "loglik.s" <- function(sigma, theta, x, y, z, weights, Tq, V, W, tau, p, q, m, M, N, Kq, minn, maxn){
 
 if(length(theta) != (p + m)) stop("Check length theta")
 
-ans = .C("ll_h_R", theta = as.double(theta), as.double(x), as.double(y), as.double(z), as.double(weights), as.double(Tq), as.double(V), as.double(W),	as.double(sigma), as.single(tau), as.integer(p), as.integer(q), as.integer(m), as.integer(M),
-		as.integer(N), as.integer(Kq), as.integer(minn-1), as.integer(maxn), loglik = double(1), PACKAGE = "lqmm")
+ans = .C("C_ll_h", theta = as.double(theta), as.double(x), as.double(y), as.double(z), as.double(weights), as.double(Tq), as.double(V), as.double(W),	as.double(sigma), as.single(tau), as.integer(p), as.integer(q), as.integer(m), as.integer(M), as.integer(N), as.integer(Kq), as.integer(minn-1), as.integer(maxn), loglik = double(1))#, PACKAGE = "lqmm")
 
 ans$loglik
 }
@@ -216,7 +211,7 @@ maxn <- cumsum(ns)
 if(length(weights) != M) stop("Length of \"weights\" does not match number of groups")
 
 UP_max_iter <- control$UP_max_iter
-if(UP_max_iter == 0) break("Increase number of maximum iterations", " (", UP_max_iter,")", sep = "")
+if(UP_max_iter == 0) stop("Increase number of maximum iterations", " (", UP_max_iter,")", sep = "")
 r <- 0
 
 while(r < UP_max_iter){
@@ -289,18 +284,18 @@ if(length(weights) != M) stop("Length of \"weights\" does not match number of gr
 
 if(is.null(control$LP_step)) control$LP_step <- sd(as.numeric(y))
 UP_max_iter <- control$UP_max_iter
-if(UP_max_iter == 0) break("Increase number of maximum iterations", " (", UP_max_iter,")", sep = "")
+if(UP_max_iter == 0) stop("Increase number of maximum iterations", " (", UP_max_iter,")", sep = "")
 r <- 0
 
 while(r < UP_max_iter){
 
 if(control$verbose) cat(paste("Upper loop = ", r + 1, "\n",sep=""))
 
-ans <- .C("gradientSd_h", theta = as.double(theta_0), as.double(x), as.double(y), as.double(z), as.double(weights), as.double(Tq), as.double(V), as.double(W),
+ans <- .C("C_gradientSh", theta = as.double(theta_0), as.double(x), as.double(y), as.double(z), as.double(weights), as.double(Tq), as.double(V), as.double(W),
 		as.double(sigma_0), as.single(tau), as.integer(p), as.integer(q), as.integer(m), as.integer(M), as.integer(N),	as.integer(Kq), as.integer(minn-1),
 		as.integer(maxn), as.double(control$LP_step), as.double(control$beta), as.double(control$gamma), as.integer(control$reset_step),
 		as.double(control$LP_tol_ll), as.double(control$LP_tol_theta), as.integer(control$check_theta), as.integer(control$LP_max_iter),
-		as.integer(control$verbose), low_loop = integer(1), double(1), grad = double(p + m), opt_val = double(1), PACKAGE = "lqmm")
+		as.integer(control$verbose), low_loop = integer(1), double(1), grad = double(p + m), opt_val = double(1))#, PACKAGE = "lqmm")
 
 theta_1 <- ans$theta
 grad <- ans$grad
@@ -343,7 +338,6 @@ if(LP_max_iter < 0 || UP_max_iter < 0) stop("Number of iterations cannot be nega
 list(method = method, LP_tol_ll = LP_tol_ll, LP_tol_theta = LP_tol_theta, check_theta = check_theta, LP_step = LP_step, beta = beta, gamma = gamma, reset_step = reset_step, LP_max_iter = as.integer(LP_max_iter), UP_tol = UP_tol, UP_max_iter = as.integer(UP_max_iter), startQR = startQR, verbose = verbose)
 
 }
-
 
 errorHandling <- function(code, type, maxit, tol, fn){
 
@@ -558,7 +552,6 @@ theta.z.dim <- function(type, n){
 		"pdSymm" = n*(n+1)/2)
 }
 
-
 covHandling <- function(theta, n, cov_name, quad_type){
 
 	if(cov_name %in% c("pdIdent","pdDiag")){
@@ -643,7 +636,6 @@ return(sigma)
 
 }
 
-
 print.lqmm <- function(x, digits = max(3, getOption("digits") - 3), ...){
 
 tau <- x$tau
@@ -725,7 +717,6 @@ return(ans)
 
 }
 
-
 ranef.lqmm <- function(object, ...){
 
 tau <- object$tau
@@ -745,8 +736,7 @@ if(cov_name %in% c("pdIdent","pdDiag")){
 
 if(nq == 1){
   psi <- varAL(object$scale, tau)
-  INV <- lapply(mmr.l, function(x, a, b, q) {x <- matrix(x, ncol = q); n <- nrow(x); y <- x%*%a%*%t(x) + diag(b, n); solve(y)},
-                                      a = sigma, b = psi, q = q)
+  INV <- lapply(mmr.l, function(x, a, b, q) {x <- matrix(x, ncol = q); n <- nrow(x); y <- x%*%a%*%t(x) + diag(b, n); solve(y)}, a = sigma, b = psi, q = q)
   GZ <- lapply(mmr.l, function(x, a, q) {x <- matrix(x, ncol = q); a%*%t(x)}, a = sigma, q = q)
   RES <- split(object$y - object$mmf%*%matrix(object$theta_x) - meanAL(0, object$scale, tau), group)
   for(i in 1:M){
@@ -775,7 +765,6 @@ colnames(ans) <- object$mm;
  }
 return(ans)
 }
-
 
 predict.lqmm <- function(object, level = 0, ...){
 
@@ -822,7 +811,6 @@ if(level == 1) {
 return(ans)
 }
 
-
 predint.lqmm <- function(object, level = 0, alpha = 0.05, R = 50, seed = round(runif(1, 1, 10000))){
 
 tau <- object$tau
@@ -868,13 +856,11 @@ return(ans)
 
 }
 
-
 residuals.lqmm <- function(object, level = 0, ...){
 
 object$y[object$revOrder] - predict(object, level = level)
 
 }
-
 
 logLik.lqmm <- function(object, ...){
 
@@ -896,7 +882,6 @@ attr(ans, "class") <- "logLik"
 
 return(ans)
 }
-
 
 summary.lqmm <- function(object, method = "boot", alpha = 0.05, covariance = FALSE, ...){
 
@@ -970,7 +955,6 @@ return(object)
 
 }
 
-
 print.summary.lqmm <- function(x, digits = max(3, getOption("digits") - 3), ...){
 
 tau <- x$tau
@@ -997,11 +981,6 @@ cat("\n")
     }
   }
 
-
-
-LRp <- attr(x$LRtest, "pvalue")
-cat("Null model (likelihood ratio):\n")
-print.default(paste(format(x$LRtest, digits = digits), " (p = ", format(LRp, digits = digits), ")", sep =""), quote = FALSE)
 cat("AIC:\n")
   print.default(
     paste(format(x$aic, digits = digits), " (df = ", attr(x$logLik, "df"), ")", sep =""),
@@ -1113,7 +1092,6 @@ return(bootmat)
 
 }
 
-
 extractBoot.boot.lqmm <- function(object, which = "fixed"){
 
 tau <- attr(object, "tau")
@@ -1146,7 +1124,6 @@ return(ans)
 
 
 }
-
 
 summary.boot.lqmm <- function(object, alpha = 0.05, digits = max(3, getOption("digits") - 3), ...){
 
@@ -1189,7 +1166,6 @@ else {
 }
 
 }
-
 
 extractAll <- function(object){
 

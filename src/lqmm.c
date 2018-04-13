@@ -3,13 +3,13 @@ Estimation of linear quantile models and linear quantile mixed models (ver 1.5),
 
 This suite of routines is part of the R package lqmm. The models stem from the work by Geraci (Ph.D. Dissertation, University of Florence, 2005), Geraci and Bottai ("Quantile regression for longitudinal data using the asymmetric Laplace distribution", Biostatistics 8, 2007) and Geraci and Bottai ("Linear quantile mixed models", Statistics and Computing, 2014) in which the asymmetric Laplace likelihood is linked to the estimation of conditional quantiles of a response variable given covariates and cluster-specific random effects. The estimation of its parameters entails unconstrained maximization of a concave and nondifferentiable function over the real space. The algorithm is based on the gradient of the log-likelihood that generates a finite sequence of parameter values along which the likelihood increases. 
 
-Acknowledgements: contributions to the function 'll_s_d' by Matteo Bottai (Karolinska Institutet).
+Acknowledgements: contributions to the function 'll_i' by Matteo Bottai (Karolinska Institutet).
 
 */
 
+#include <R.h>
 #include <Rinternals.h>
 #include <Rmath.h>
-#include <R.h>
 #include <R_ext/Applic.h>
 #include <R_ext/Lapack.h>
 #include <R_ext/BLAS.h>
@@ -49,7 +49,7 @@ INDEPENDENT DATA
 
 */
 
-double ll_s_d(double *theta, double *x, double *y, float *quantile, int *N, int *p, double *deriv)
+double ll_i(double *theta, double *x, double *y, float *quantile, int *N, int *p, double *deriv)
 {
 
 /*  Likelihood (objective) function and gradient for independent data
@@ -89,7 +89,8 @@ double ll_s_d(double *theta, double *x, double *y, float *quantile, int *N, int 
 	return ans;
 }
 
-void gradientSd_s(double theta[], double *x, double *y, float *quantile, int *N, int *p, double *STEP, double *beta, double *gamma, int *RESET_STEP, double *TOL_LL, double *TOL_THETA, int *CHECK_THETA, int *MAXIT, int *verbose, int CONVERGE[], double deriv[], double optimum[])
+// [[register]]
+void C_gradientSi(double theta[], double *x, double *y, float *quantile, int *N, int *p, double *STEP, double *beta, double *gamma, int *RESET_STEP, double *TOL_LL, double *TOL_THETA, int *CHECK_THETA, int *MAXIT, int *verbose, int CONVERGE[], double deriv[], double optimum[])
 {
 
 /*
@@ -109,9 +110,9 @@ Optimization algorithm for quantile models with independent data
 	step = *STEP;
 	iter = 0;
 	check_theta = 0;
-	
+
 	//initialize loglikelihood and gradient with theta_0
-	f_0 = ll_s_d(theta, x, y, quantile, N, p, deriv);
+	f_0 = ll_i(theta, x, y, quantile, N, p, deriv);
 
 	for(j = 0; j < loc_p; j++){
     grad[j] = deriv[j];
@@ -119,16 +120,16 @@ Optimization algorithm for quantile models with independent data
 
 	//NOTE: this loop MINIMIZES the negative log-likelihood
 	for(iter = 0; iter < maxit; iter++){//loop
-	  
+	    if(*verbose == 1) {Rprintf("  (%i",iter+1); Rprintf(")"); Rprintf(" logLik = %5.12f\n", f_0);}
+	
 		//update parameter
 		for(j = 0; j < loc_p; j++){
 		  theta_tmp[j] = theta[j] - grad[j]*step;
 		}
 
 		//update likelihood and gradient
-		f_1 = ll_s_d(theta_tmp, x, y, quantile, N, p, deriv);
-		if(*verbose == 1) {Rprintf("  (%i",iter+1); Rprintf(")"); Rprintf(" logLik = %5.12f\n", f_1);}
-		
+		f_1 = ll_i(theta_tmp, x, y, quantile, N, p, deriv);
+				
 		//line search
 		if (f_1 > f_0) {
 			step = step * (*beta);
@@ -151,15 +152,15 @@ Optimization algorithm for quantile models with independent data
 
 			if(*RESET_STEP == 1) {step = *STEP;} else {step = step * (*gamma);}
 		}
-	} //end loop1
+	} //end loop
   
-
-
 	OUT_FOR:;
 	if(iter < maxit) {CONVERGE[0] = iter + 1;}
 	if((iter == maxit) & (maxit > 0)){CONVERGE[0] = -1;}
    
-	 optimum[0] = f_0;
+	F77_CALL(dcopy)(&loc_p, theta_tmp, &inc, theta, &inc);
+	F77_CALL(dcopy)(&loc_p, deriv, &inc, grad, &inc);
+	optimum[0] = f_0;
 }
 
 
@@ -209,7 +210,8 @@ HIERARCHICAL DATA
 
 */
 
-void ll_h_R(double theta[], double *x, double *y, double *z, double *weights, double *Tq, double *V, double *W, double *sigma, float *quantile, int *p, int *q, int *m, int *M, int *N, int *Kq, int *start, int *end, double *loglik)
+// [[register]]
+void C_ll_h(double theta[], double *x, double *y, double *z, double *weights, double *Tq, double *V, double *W, double *sigma, float *quantile, int *p, int *q, int *m, int *M, int *N, int *Kq, int *start, int *end, double *loglik)
 {
 
 /*  Likelihood (objective) function for hierarchical data - type void to be called from within R
@@ -294,7 +296,7 @@ void ll_h_R(double theta[], double *x, double *y, double *z, double *weights, do
 }
 
 
-double ll_h_d(double *theta, double *x, double *y, double *z, double *weights, double *Tq, double *V, double *W, double *sigma, float *quantile, int *p, int *q, int *m, int *M, int *N, int *Kq, int *start, int *end, double *deriv, double *loglik)
+double int_ll_h(double *theta, double *x, double *y, double *z, double *weights, double *Tq, double *V, double *W, double *sigma, float *quantile, int *p, int *q, int *m, int *M, int *N, int *Kq, int *start, int *end, double *deriv, double *loglik)
 {
 
 /*  Likelihood (objective) function and gradient for hierarchical data
@@ -418,8 +420,8 @@ double ll_h_d(double *theta, double *x, double *y, double *z, double *weights, d
 return loglik[0];
 }
 
-
-void gradientSd_h(double theta[], double *x, double *y, double *z, double *weights, double *Tq, double *V, double *W, double *sigma, float *quantile, int *p, int *q, int *m, int *M, int *N, int *Kq, int *start, int *end, double *STEP, double *beta, double *gamma, int *RESET_STEP, double *TOL_LL, double *TOL_THETA, int *CHECK_THETA, int *MAXIT, int *verbose, int CONVERGE[], double loglik[], double deriv[], double optimum[])
+// [[register]]
+void C_gradientSh(double theta[], double *x, double *y, double *z, double *weights, double *Tq, double *V, double *W, double *sigma, float *quantile, int *p, int *q, int *m, int *M, int *N, int *Kq, int *start, int *end, double *STEP, double *beta, double *gamma, int *RESET_STEP, double *TOL_LL, double *TOL_THETA, int *CHECK_THETA, int *MAXIT, int *verbose, int CONVERGE[], double loglik[], double deriv[], double optimum[])
 {
 
 /*
@@ -440,7 +442,7 @@ Optimization algorithm for quantile models with hierarchical data
 	check_theta = 0;
 
 	//initialize loglikelihood and gradient with theta_0
-	f_0 = ll_h_d(theta, x, y, z, weights, Tq, V, W, sigma, quantile, p, q, m, M, N, Kq, start, end, deriv, loglik);
+	f_0 = int_ll_h(theta, x, y, z, weights, Tq, V, W, sigma, quantile, p, q, m, M, N, Kq, start, end, deriv, loglik);
 
 	for(j = 0; j < n; j++){
 		grad[j] = deriv[j];
@@ -457,7 +459,7 @@ Optimization algorithm for quantile models with hierarchical data
 		theta_tmp[j] = theta[j] - grad[j]*step;
 		}
 
-		f_1 = ll_h_d(theta_tmp, x, y, z, weights, Tq, V, W, sigma, quantile, p, q, m, M, N, Kq, start, end, deriv, loglik);
+		f_1 = int_ll_h(theta_tmp, x, y, z, weights, Tq, V, W, sigma, quantile, p, q, m, M, N, Kq, start, end, deriv, loglik);
     
 		if(*verbose == 1) {
 			Rprintf("  (%i",iter+1); Rprintf(")"); Rprintf(" logLik = %5.5f\n", -f_1);

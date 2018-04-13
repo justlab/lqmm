@@ -120,13 +120,15 @@ An object of class \code{lqmm} is a list containing the following components:
 }
 
 \references{
-Genz A, and Keister BD (1996). Fully symmetric interpolatory rules for multiple integrals over infinite regions with Gaussian weight. Journal of Computational and Applied Mathematics, 71(2), 299--309.
+Genz A, and Keister BD (1996). Fully symmetric interpolatory rules for multiple integrals over infinite regions with Gaussian weight. Journal of Computational and Applied Mathematics, 71(2), 299--309. <doi:10.1016/0377-0427(95)00232-4>
 
-Geraci M and Bottai M (2007). Quantile regression for longitudinal data using the asymmetric Laplace distribution. Biostatistics 8(1), 140--154.
+Geraci M (2014). Linear quantile mixed models: The lqmm package for Laplace quantile regression. Journal of Statistical Software, 57(13), 1--29. <doi:10.18637/jss.v057.i13>
 
-Geraci M and Bottai M (2014). Linear quantile mixed models. Statistics and Computing, 24(3), 461--479. doi: 10.1007/s11222-013-9381-9.
+Geraci M and Bottai M (2007). Quantile regression for longitudinal data using the asymmetric Laplace distribution. Biostatistics 8(1), 140--154. <doi:10.1093/biostatistics/kxj039>
 
-Heiss F, and Winschel V (2008). Likelihood approximation by numerical integration on sparse grids. Journal of Econometrics, 144(1), 62--80.
+Geraci M and Bottai M (2014). Linear quantile mixed models. Statistics and Computing, 24(3), 461--479. <doi:10.1007/s11222-013-9381-9>.
+
+Heiss F, and Winschel V (2008). Likelihood approximation by numerical integration on sparse grids. Journal of Econometrics, 144(1), 62--80. <doi:10.1016/j.jeconom.2007.12.004>
 }
 
 \author{

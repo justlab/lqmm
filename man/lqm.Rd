@@ -71,6 +71,8 @@ An object of class \code{lqm} is a list containing the following components:
 \references{
 Bottai M, Orsini N, Geraci M (2015). A Gradient Search Maximization Algorithm for the Asymmetric Laplace Likelihood, Journal of Statistical Computation and Simulation, 85(10), 1919-1925.
 
+Chen C (2007). A finite smoothing algorithm for quantile regression. Journal of Computational and Graphical Statistics, 16(1), 136-164. 
+
 Koenker R and Bassett G (1978). Regression Quantiles. Econometrica 46(1), 33--50.
 }
 

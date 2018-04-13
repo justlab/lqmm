@@ -8,10 +8,6 @@ Control parameters for lqmm estimation
 A list of parameters for controlling the fitting process.
 }
 
-
-
-
-
 \usage{
 lqmmControl(method = "gs", LP_tol_ll = 1e-5, LP_tol_theta = 1e-5,
 	check_theta = FALSE, LP_step = NULL, beta = 0.5, gamma = 1,

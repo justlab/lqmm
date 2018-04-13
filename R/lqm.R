@@ -14,17 +14,63 @@
 
 ##########################################################################################
 # lqm functions (independent data)
-# (negative) Laplace log-likelihood
-"loglik.al" <- function(theta, x, y, tau) {
+# (negative) Laplace log-likelihood, gradient and Hessian
 
-res <- (y - x %*% matrix(theta))
-ind <- ifelse(res < 0, 1, 0)
-val <- sum(res * (tau - ind))
+"logliki" <- function(theta, x, y, tau, smooth = FALSE, omicron = 0.001) {
 
-return(val)
+n <- length(y)
+res <- y - x %*% matrix(theta)
 
+if(smooth){
+	s <- ifelse(res <= (tau - 1)*omicron, -1, ifelse(res >= tau*omicron, 1, 0))
+	w <- as.numeric(1 - s^2)
+	W <- diag(w, n, n)
+	gs <- s*((2*tau - 1)*s + 1)/2
+	cs <- sum(0.25*(1-2*tau)*omicron*s - 0.25*(1-2*tau+2*tau^2)*omicron*s^2)
+	res <- matrix(res)
+	ans <- as.numeric(1/(2*omicron) * t(res) %*% W %*% res + t(gs) %*% res + cs)
+	grad <- -t(x) %*% matrix(1/omicron * W %*% res + gs)
+	hess <- 1/omicron * t(x) %*% W %*% x
+} else {
+	ind <- tau - as.numeric(res < 0)
+	ans <- as.numeric(sum(res*ind))
+	grad <- -t(x) %*% ind
+	hess <- matrix(0, ncol(x), ncol(x))
 }
 
+if(is.na(ans)){
+	ans <- Inf
+	grad <- matrix(Inf, ncol(x))
+}
+
+attr(ans, "grad") <- matrix(grad)
+
+return(ans)
+}
+
+"score.al" <- function(theta, x, y, tau, smooth, omicron = 0.001) {
+
+res <- as.numeric(y - x %*% matrix(theta))
+n <- length(y)
+
+if(smooth){
+	s <- ifelse(res <= (tau - 1)*omicron, -1, ifelse(res >= tau*omicron, 1, 0))
+	w <- as.numeric(1 - s^2)
+	W <- diag(w, n, n)
+	gs <- s*((2*tau - 1)*s + 1)/2
+	ans <- -t(x) %*% matrix(1/omicron * W %*% res + gs)
+} else {
+	ans <- -t(x) %*% matrix(tau - as.numeric(res < 0), n, 1)
+}
+
+if(any(is.na(ans))){
+	ans <- matrix(Inf, ncol(x))
+}
+
+
+return(matrix(ans))
+
+}
 
 "switch_check" <- function(l0, l1, tol_ll, t0, t1, tol_theta, rule = "1"){
 
@@ -38,40 +84,35 @@ switch(rule,
 
 }
 
-
-"lqmgsR" <- function(theta, x, y, weights, tau, control){
-
-n <- sum(weights)
-wx <- x*weights
-wy <- y*weights
+"gradientSi" <- function(theta, x, y, tau, control){
 
 step <- control$loop_step
 maxiter <- control$loop_max_iter
+omicron <- control$omicron
 
 theta_0 <- theta
-ll_0 <- loglik.al(theta_0, wx, wy, tau)
-eps <- .Machine$double.eps^(1/2)
+ll_0 <- logliki(theta_0, x, y, tau, control$smooth, omicron)
+eps <- .Machine$double.eps
 
 for(i in 1:maxiter) {
 	if(control$verbose) cat(paste0("  (", i, ") logLik = ", round(ll_0,12), "\n"))
 	# line search
-	grad <- t(wx) %*% (tau - as.vector(wy < wx %*% theta_0))/n
-	theta_1 <- theta_0 + grad*step
-	ll_1 <- loglik.al(theta_1, wx, wy, tau)
-	if(ll_1 < ll_0 + eps) {
+	theta_1 <- theta_0 - attributes(ll_0)$grad*step
+	ll_1 <- logliki(theta_1, x, y, tau, control$smooth, omicron)
+	if(ll_1 > ll_0){
+		if(control$verbose) cat("  Decreasing step...\n")
+		step <- step*control$beta
+	} else {
 		rule <- if(control$check_theta) "2" else "1"
 		check <- switch_check(ll_0, ll_1, control$loop_tol_ll, theta_0, theta_1, control$loop_tol_theta, rule = rule)
 		if(check) break
-		theta_0 <- theta_1
+			theta_0 <- theta_1
 			ll_0 <- ll_1
-			step <- step*control$gamma
-		} else {
-			if(control$verbose) cat("  Decreasing step...\n")
-			step <- step*control$beta
+			step <- if(control$reset_step) control$loop_step else step*control$gamma
 	}
 }
 
-list(theta = as.numeric(theta_1), grad = grad, optimum = ll_1, CONVERGE = if(i==maxiter) -1 else i)
+list(theta = as.numeric(theta_1), grad = attributes(ll_1)$grad, optimum = as.numeric(ll_1), CONVERGE = if(i==maxiter) -1 else i)
 
 }
 
@@ -79,18 +120,18 @@ list(theta = as.numeric(theta_1), grad = grad, optimum = ll_1, CONVERGE = if(i==
 
 n <- length(y)
 p <- ncol(x)
+wx <- x*weights
+wy <- y*weights
+
 if(is.null(p)) stop("x must be a matrix")
-if(missing(theta)) theta <- lm.fit(as.matrix(x), y)$coefficients
-if(is.null(control$loop_step)) control$loop_step <- sd(as.numeric(y))
+if(missing(theta)) theta <- lm.fit(as.matrix(wx), wy)$coefficients
+if(is.null(control$loop_step)) control$loop_step <- sd(as.numeric(wy))
 if(length(tau) > 1) {tau <- tau[1]; warning("Length of tau is greater than 1. Only first value taken")}
 
 if(control$method == "gs1"){
-	wx <- x*weights
-	wy <- y*weights
-	fit <- .C("gradientSd_s", theta = as.double(theta), as.double(wx), as.double(wy), as.single(tau), as.integer(n), as.integer(p),
-			  as.double(control$loop_step), as.double(control$beta), as.double(control$gamma), as.integer(control$reset_step), as.double(control$loop_tol_ll), as.double(control$loop_tol_theta), as.integer(control$check_theta), as.integer(control$loop_max_iter), as.integer(control$verbose), CONVERGE = integer(1), grad = double(p), optimum = double(1), PACKAGE = "lqmm")
+	fit <- .C("C_gradientSi", theta = as.double(theta), as.double(wx), as.double(wy), as.single(tau), as.integer(n), as.integer(p), as.double(control$loop_step), as.double(control$beta), as.double(control$gamma), as.integer(control$reset_step), as.double(control$loop_tol_ll), as.double(control$loop_tol_theta), as.integer(control$check_theta), as.integer(control$loop_max_iter), as.integer(control$verbose), CONVERGE = integer(1), grad = double(p), optimum = double(1))#, PACKAGE = "lqmm")
 } else if(control$method == "gs2") {
-	fit <- lqmgsR(theta, x, y, weights, tau, control)
+	fit <- gradientSi(theta, wx, wy, tau, control)
 }
 
 fit$residuals <- y - x%*%matrix(fit$theta)
@@ -100,17 +141,17 @@ OPTIMIZATION <- list(loop = fit$CONVERGE)
 
 errorHandling(OPTIMIZATION$loop, "low", control$loop_max_iter, control$loop_tol_ll, "lqm")
 
-list(theta = fit$theta, scale = fit$scale, gradient = fit$grad, logLik = fit$logLik, opt = OPTIMIZATION)
+list(theta = fit$theta, scale = fit$scale, gradient = matrix(fit$grad), logLik = fit$logLik, opt = OPTIMIZATION)
 
 }
 
-"lqmControl" <- function(method = "gs1", loop_tol_ll = 1e-5, loop_tol_theta = 1e-3, check_theta = FALSE, loop_step = NULL, beta = 0.5, gamma = 1.25, reset_step = FALSE, loop_max_iter = 1000, verbose = FALSE)
+"lqmControl" <- function(method = "gs1", loop_tol_ll = 1e-5, loop_tol_theta = 1e-3, check_theta = FALSE, loop_step = NULL, beta = 0.5, gamma = 1.25, reset_step = FALSE, loop_max_iter = 1000, smooth = FALSE, omicron = 0.001, verbose = FALSE)
 {
 if(beta > 1 || beta < 0) stop("Beta must be a decreasing factor in (0,1)")
 if(gamma < 1) stop("Beta must be a nondecreasing factor >= 1")
 if(loop_max_iter < 0) stop("Number of iterations cannot be negative")
 
-list(method = method, loop_tol_ll = loop_tol_ll, loop_tol_theta = loop_tol_theta, check_theta = check_theta, loop_step = loop_step, beta = beta, gamma = gamma, reset_step = reset_step, loop_max_iter = as.integer(loop_max_iter), verbose = verbose)
+list(method = method, loop_tol_ll = loop_tol_ll, loop_tol_theta = loop_tol_theta, check_theta = check_theta, loop_step = loop_step, beta = beta, gamma = gamma, reset_step = reset_step, loop_max_iter = as.integer(loop_max_iter), smooth = smooth, omicron = omicron, verbose = verbose)
 
 }
 
@@ -156,12 +197,12 @@ theta_0 <- lm.wfit(x = as.matrix(x), y = y, w = w)$coefficients
 
 if(!fit) return(list(theta = theta_0, x = as.matrix(x), y = y, weights = w, tau = tau, control = control))
 
-	   if(nq == 1){
-		  fit <- lqm.fit.gs(theta = theta_0, x = as.matrix(x), y = y, weights = w, tau = tau, control = control)}
-     else {
-      fit <- vector("list", nq);
-      names(fit) <- format(tau, digits = 4);
-      for (i in 1:nq) fit[[i]] <- lqm.fit.gs(theta = theta_0, x = as.matrix(x), y = y, weights = w, tau = tau[i], control = control)
+	if(nq == 1){
+		fit <- lqm.fit.gs(theta = theta_0, x = as.matrix(x), y = y, weights = w, tau = tau, control = control)}
+	else {
+		fit <- vector("list", nq);
+		names(fit) <- format(tau, digits = 4);
+		for (i in 1:nq) fit[[i]] <- lqm.fit.gs(theta = theta_0, x = as.matrix(x), y = y, weights = w, tau = tau[i], control = control)
      }
 
 term.labels <- colnames(x)
@@ -499,8 +540,7 @@ invisible(x)
 }
 
 predict.lqm <- function(object, newdata, interval = FALSE,
-	level = 0.95, na.action = na.pass, ...) 
-{
+	level = 0.95, na.action = na.pass, ...){
 
 tau <- object$tau
 nq <- length(tau)

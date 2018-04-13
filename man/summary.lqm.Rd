@@ -40,7 +40,7 @@ an object of class \code{summary.lqm}. The function \code{summary.lqm} computes 
 \source{
 The code for the "nid" method has been adapted from the function \code{summary.rq} in package \code{quantreg}. It depends on the function \code{bandwidth.rq}. 
 
-Roger Koenker (2015). quantreg: Quantile Regression. R package version 5.19. \url{http://CRAN.R-project.org/package=quantreg}
+Roger Koenker (2016). quantreg: Quantile Regression. R package version 5.29. \url{https://CRAN.R-project.org/package=quantreg}
 
 }
 

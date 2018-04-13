@@ -1,8 +1,9 @@
-useDynLib("lqmm")
+useDynLib(lqmm, .registration=TRUE)
+
 import("stats")
+import("SparseGrid")
 importFrom("utils", "packageDescription")
 importFrom("nlme", "ranef", "VarCorr")
-import("SparseGrid")
 
 exportPattern("^[^\\.]")
 export(ranef)

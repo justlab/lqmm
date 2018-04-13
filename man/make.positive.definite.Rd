@@ -10,7 +10,7 @@ See \code{help("make.positive.definite")} from package \code{corpcor}.
 }
 
 \source{
-Juliane Schaefer, Rainer Opgen-Rhein, Verena Zuber, A. Pedro Duarte Silva and Korbinian Strimmer. (2011). corpcor: Efficient Estimation of Covariance and (Partial) Correlation. R package version 1.6.0. \url{http://CRAN.R-project.org/package=corpcor}
+Juliane Schaefer, Rainer Opgen-Rhein, Verena Zuber, A. Pedro Duarte Silva and Korbinian Strimmer. (2011). corpcor: Efficient Estimation of Covariance and (Partial) Correlation. R package version 1.6.0. \url{https://CRAN.R-project.org/package=corpcor}
 }
 \author{
 Original version by Korbinian Strimmer

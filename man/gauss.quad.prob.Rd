@@ -10,7 +10,7 @@ This function calculates nodes and weights for Gaussian quadrature in terms of p
 }
 
 \source{
-Gordon Smyth with contributions from Yifang Hu, Peter Dunn and Belinda Phipson. (2011). statmod: Statistical Modeling. R package version 1.4.11. \url{http://CRAN.R-project.org/package=statmod}
+Gordon Smyth with contributions from Yifang Hu, Peter Dunn and Belinda Phipson. (2011). statmod: Statistical Modeling. R package version 1.4.11. \url{https://CRAN.R-project.org/package=statmod}
 }
 
 \author{
