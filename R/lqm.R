@@ -304,39 +304,35 @@ control <- object$control
 control$verbose <- FALSE
 
 if(nq == 1){
-  bootmat <- matrix(NA, R, npars);
-  colnames(bootmat) <- object$term.labels
-  FIT_ARGS <- list(theta = object$theta, tau = tau, control = control)
-  for(i in 1:R){
-    a <- table(obsS[,i]);
-    s <- as.numeric(names(a));
-    test <- "try-error";
-    while(test=="try-error"){
-      FIT_ARGS$x <- as.matrix(object$x[s,])
-      FIT_ARGS$y <- object$y[s]
-      FIT_ARGS$weights <- as.numeric(a)
-      FIT_ARGS$theta <- if(!startQR) lm.wfit(x = FIT_ARGS$x, y = FIT_ARGS$y, w = FIT_ARGS$weights)$coefficients
-      fit <- try(do.call(lqm.fit.gs, FIT_ARGS));
-      test <- class("fit")
-      }
-    bootmat[i,] <- fit$theta  
-  }
+	bootmat <- matrix(NA, R, npars);
+	colnames(bootmat) <- object$term.labels
+	FIT_ARGS <- list(theta = object$theta, tau = tau, control = control)
+	for(i in 1:R){
+		a <- table(obsS[,i])
+		s <- as.numeric(names(a))
+		FIT_ARGS$x <- as.matrix(object$x[s,])
+		FIT_ARGS$y <- object$y[s]
+		FIT_ARGS$weights <- as.numeric(a)
+		FIT_ARGS$theta <- if(!startQR) lm.wfit(x = FIT_ARGS$x, y = FIT_ARGS$y, w = FIT_ARGS$weights)$coefficients
+		fit <- try(do.call(lqm.fit.gs, FIT_ARGS), silent = TRUE)
+		if(!inherits(fit, "try-error")) bootmat[i,] <- fit$theta
+	}
 } else {
-  bootmat <- array(NA, dim = c(R, npars, nq), dimnames = list(NULL, object$term.labels, paste("tau = ", format(tau, digits = 4), sep ="")));
-  FIT_ARGS <- list(control = control)
-  for(i in 1:R){
-    a <- table(obsS[,i]);
-    s <- as.numeric(names(a));
-    for (j in 1:nq){
-      FIT_ARGS$x <- as.matrix(object$x[s,])
-      FIT_ARGS$y <- object$y[s]
-      FIT_ARGS$weights <- as.numeric(a)
-      FIT_ARGS$theta <- if(startQR) object[[j]]$theta else lm.wfit(x = FIT_ARGS$x, y = FIT_ARGS$y, w = FIT_ARGS$weights)$coefficients
-      FIT_ARGS$tau <- tau[j]
-      fit <- try(do.call(lqm.fit.gs, FIT_ARGS))
-      if(class(fit)!="try-error") bootmat[i,,j] <- fit$theta
-    }
-  }
+	bootmat <- array(NA, dim = c(R, npars, nq), dimnames = list(NULL, object$term.labels, paste("tau = ", format(tau, digits = 4), sep ="")));
+	FIT_ARGS <- list(control = control)
+	for(i in 1:R){
+		a <- table(obsS[,i]);
+		s <- as.numeric(names(a));
+		for (j in 1:nq){
+			FIT_ARGS$x <- as.matrix(object$x[s,])
+			FIT_ARGS$y <- object$y[s]
+			FIT_ARGS$weights <- as.numeric(a)
+			FIT_ARGS$theta <- if(startQR) object[[j]]$theta else lm.wfit(x = FIT_ARGS$x, y = FIT_ARGS$y, w = FIT_ARGS$weights)$coefficients
+			FIT_ARGS$tau <- tau[j]
+			fit <- try(do.call(lqm.fit.gs, FIT_ARGS), silent = TRUE)
+			if(!inherits(fit, "try-error")) bootmat[i,,j] <- fit$theta
+		}
+	}
 }
 
 class(bootmat) <- "boot.lqm"
@@ -366,36 +362,35 @@ R <- attr(object, "R")
 nn <- c("Value", "Bias", "Std. Error", "Lower bound", "Upper bound", "Pr(>|t|)")
 		
 if(nq == 1){
-  bias <- est - apply(as.matrix(object), 2, mean)
-  Cov <- cov(as.matrix(object))
-  stds <- sqrt(diag(Cov))
-  lower <- est + qt(alpha/2, R - 1)*stds
-  upper <- est + qt(1 - alpha/2, R - 1)*stds
-  tP <- 2 * pt(-abs(est/stds), R - 1)
-  ans <- cbind(est, bias, stds, lower, upper, tP)
-  colnames(ans) <- nn
-  printCoefmat(ans, signif.stars = TRUE, P.values = TRUE)
+	bias <- est - apply(as.matrix(object), 2, mean)
+	Cov <- cov(as.matrix(object))
+	stds <- sqrt(diag(Cov))
+	lower <- est + qt(alpha/2, R - 1)*stds
+	upper <- est + qt(1 - alpha/2, R - 1)*stds
+	tP <- 2 * pt(-abs(est/stds), R - 1)
+	ans <- cbind(est, bias, stds, lower, upper, tP)
+	colnames(ans) <- nn
+	printCoefmat(ans, signif.stars = TRUE, P.values = TRUE)
 }
 else {
-  bias <- est - apply(object, 3, colMeans)
-  Cov <- apply(object, 3, function(x) cov(as.matrix(x)))
-  if(npars == 1) Cov <- matrix(Cov, nrow = 1)
-  stds <- sqrt(apply(Cov, 2, function(x, n) diag(matrix(x, n, n, byrow = TRUE)), n = npars))
-  lower <- est + qt(alpha/2, R - 1)*stds
-  upper <- est + qt(1 - alpha/2, R - 1)*stds
-  tP <- 2*pt(-abs(est/stds), R - 1)
-  for(i in 1:nq){
-    if(npars == 1){
-    ans <- c(est[i], bias[i], stds[i], lower[i], upper[i], tP[i]);
-    ans <- matrix(ans, nrow = 1)
-    } else {ans <- cbind(est[,i], bias[,i], stds[,i], lower[,i], upper[,i], tP[,i])}
-    rownames(ans) <- rownames(est)
-    colnames(ans) <- nn;
-    cat(paste("tau = ", tau[i], "\n", sep =""))
-    printCoefmat(ans, signif.stars = TRUE, P.values = TRUE)
-    cat("\n")
-  }
-
+	bias <- est - apply(object, 3, colMeans)
+	Cov <- apply(object, 3, function(x) cov(as.matrix(x)))
+	if(npars == 1) Cov <- matrix(Cov, nrow = 1)
+	stds <- sqrt(apply(Cov, 2, function(x, n) diag(matrix(x, n, n, byrow = TRUE)), n = npars))
+	lower <- est + qt(alpha/2, R - 1)*stds
+	upper <- est + qt(1 - alpha/2, R - 1)*stds
+	tP <- 2*pt(-abs(est/stds), R - 1)
+	for(i in 1:nq){
+	if(npars == 1){
+		ans <- c(est[i], bias[i], stds[i], lower[i], upper[i], tP[i]);
+		ans <- matrix(ans, nrow = 1)
+	} else {ans <- cbind(est[,i], bias[,i], stds[,i], lower[,i], upper[,i], tP[,i])}
+	rownames(ans) <- rownames(est)
+	colnames(ans) <- nn;
+	cat(paste("tau = ", tau[i], "\n", sep =""))
+	printCoefmat(ans, signif.stars = TRUE, P.values = TRUE)
+	cat("\n")
+	}
 }
 
 }
@@ -433,18 +428,18 @@ R <- attr(B, "R")
 		upper <- theta + qt(1 - alpha/2, R - 1)*stds
 		ans <- vector("list", nq)
 		Cov.array <- array(NA, dim = c(npars,npars,nq))
-			for(i in 1:nq){
-				if(npars == 1){
-				ans[[i]] <- matrix(c(theta[i], stds[i], lower[i], upper[i], tP[i]), nrow = 1);
-				rownames(ans[[i]]) <- rownames(theta)
-				colnames(ans[[i]]) <- nn;
-				} else {
-				ans[[i]] <- cbind(theta[,i], stds[,i], lower[,i], upper[,i], tP[,i])
-				rownames(ans[[i]]) <- rownames(theta)
-				colnames(ans[[i]]) <- nn;
-				}
-				Cov.array[,,i] <- matrix(Cov[,i], npars, npars)
+		for(i in 1:nq){
+			if(npars == 1){
+			ans[[i]] <- matrix(c(theta[i], stds[i], lower[i], upper[i], tP[i]), nrow = 1);
+			rownames(ans[[i]]) <- rownames(theta)
+			colnames(ans[[i]]) <- nn;
+			} else {
+			ans[[i]] <- cbind(theta[,i], stds[,i], lower[,i], upper[,i], tP[,i])
+			rownames(ans[[i]]) <- rownames(theta)
+			colnames(ans[[i]]) <- nn;
 			}
+			Cov.array[,,i] <- matrix(Cov[,i], npars, npars)
+		}
 		Cov <- Cov.array
 		dimnames(Cov) <- list(rownames(theta), rownames(theta), format(tau, digits = 4))
 		}
@@ -727,9 +722,8 @@ lqm.counts <- function (formula, data, weights = NULL, offset = NULL, contrasts 
     d <- array(NA, dim = c(p, p, M))
     sel <- rep(TRUE, M)
     for (i in 1:M) {
-        tmpInv <- try(solve(t(x * multiplier[, i]) %*% x/n), 
-            silent = TRUE)
-        if (class(tmpInv) != "try-error") 
+        tmpInv <- try(solve(t(x * multiplier[, i]) %*% x/n), silent = TRUE)
+        if (!inherits(tmpInv, "try-error"))
             {d[, , i] <- tmpInv}
         else {sel[i] <- FALSE}
     }

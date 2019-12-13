@@ -1,8 +1,8 @@
 Package: lqmm
 Type: Package
 Title: Linear Quantile Mixed Models
-Version: 1.5.4
-Date: 2018-04-13
+Version: 1.5.5
+Date: 2019-12-12
 Author: Marco Geraci
 Maintainer: Marco Geraci <geraci@mailbox.sc.edu>
 Depends: R (>= 3.0.0)
@@ -16,8 +16,9 @@ Description: Functions to fit quantile regression models for hierarchical
     independent	data and for count responses.
 License: GPL (>= 2)
 LazyLoad: yes
-RoxygenNote: 6.0.1
+RoxygenNote: 7.0.2
+Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2018-04-13 12:43:38 UTC; geraci
+Packaged: 2019-12-12 20:31:07 UTC; geraci
 Repository: CRAN
-Date/Publication: 2018-04-13 13:17:46 UTC
+Date/Publication: 2019-12-13 05:40:13 UTC

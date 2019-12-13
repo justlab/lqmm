@@ -92,4 +92,11 @@ Version 1.5.4 (April 7, 2018)
 - Fixed CRAN message 'Note: break used in wrong context: no loop is visible'
 - Removed LRT from lqmm summary
 
+=============================================
+
+Version 1.5.5 (December 12, 2019)
+
+- Fixed CRAN error related to _R_CLASS_MATRIX_ARRAY_ starting from R 4.0.0
+- Fixed bug in boot.lqm
+- Fixed bug in boot.lqmm
 

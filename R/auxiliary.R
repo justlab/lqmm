@@ -48,7 +48,7 @@ predint <- function(object, level = 0, alpha = 0.05, R = 50, seed = round(runif(
     }
     if (method == "chol") {
         val = try(chol(m), silent = TRUE)
-        if (class(val) == "try-error") 
+        if (inherits(val, "try-error")) 
             return(FALSE)
         else return(TRUE)
     }
