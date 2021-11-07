@@ -1,9 +1,17 @@
+#define USE_FC_LEN_T
+#include <R.h>
+#include <Rinternals.h>
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
-/* FIXME: 
-   Check these declarations against the C/Fortran source code.
-*/
+void F77_NAME(rmsg)(char *msg, FC_LEN_T msg_len)
+{
+    char cmsg[msg_len+1];
+    strncpy(cmsg, msg, msg_len);
+    cmsg[msg_len] = '\0'; // nul-terminate the string, to be sure
+    // do something with ‘cmsg’ 
+}
+
 
 /* .C calls */
 

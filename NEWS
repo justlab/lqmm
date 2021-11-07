@@ -100,3 +100,10 @@ Version 1.5.5 (December 12, 2019)
 - Fixed bug in boot.lqm
 - Fixed bug in boot.lqmm
 
+=============================================
+
+Version 1.5.6 (November 4, 2021)
+
+- CRAN request to define USE_FC_LEN_T in headers, obligatory starting from R 4.2.0
+- Added newdata argument in predict.lqmm
+- Changed maintainer's email

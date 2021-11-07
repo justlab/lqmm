@@ -312,7 +312,7 @@ eps <- .Machine$double.eps^(2/3)
 if(any(tau > 1) | any(tau < 0)) stop("Parameter 'tau' must be in [0,1]")
 if (tau == 0) tau <- eps
 if (tau == 1) tau <- 1 - eps
-if(sigma < 0) warning("Scale parameter 'sigma' is negative")
+if(any(sigma < 0)) warning("Scale parameter 'sigma' is negative")
 
 ind <- ifelse(x < mu, 1, 0)
 
@@ -328,7 +328,7 @@ eps <- .Machine$double.eps^(2/3)
 if(any(tau > 1) | any(tau < 0)) stop("Parameter 'tau' must be in [0,1]")
 if (tau == 0) tau <- eps
 if (tau == 1) tau <- 1 - eps
-if(sigma < 0) warning("Scale parameter 'sigma' is negative")
+if(any(sigma < 0)) warning("Scale parameter 'sigma' is negative")
 
 ifelse(x < mu, tau * exp( (1 - tau) / sigma * (x - mu)),
 
@@ -342,7 +342,7 @@ eps <- .Machine$double.eps^(2/3)
 if(any(tau > 1) | any(tau < 0)) stop("Parameter 'tau' must be in [0,1]")
 if (tau == 0) tau <- eps
 if (tau == 1) tau <- 1 - eps
-if(sigma < 0) warning("Scale parameter 'sigma' is negative")
+if(any(sigma < 0)) warning("Scale parameter 'sigma' is negative")
 
 u <- runif(n)
 
@@ -362,7 +362,7 @@ eps <- .Machine$double.eps^(2/3)
 if(any(tau > 1) | any(tau < 0)) stop("Parameter 'tau' must be in [0,1]")
 if (tau == 0) tau <- eps
 if (tau == 1) tau <- 1 - eps
-if(sigma < 0) warning("Scale parameter 'sigma' is negative")
+if(any(sigma < 0)) warning("Scale parameter 'sigma' is negative")
 
 ifelse(x < tau, mu + (sigma/(1-tau))*log(x/tau),
 
@@ -376,7 +376,7 @@ eps <- .Machine$double.eps^(2/3)
 if(any(tau > 1) | any(tau < 0)) stop("Parameter 'tau' must be in [0,1]")
 if (tau == 0) tau <- eps
 if (tau == 1) tau <- 1 - eps
-if(sigma < 0) warning("Scale parameter 'sigma' is negative")
+if(any(sigma < 0)) warning("Scale parameter 'sigma' is negative")
 
 mu + sigma*(1-2*tau)/(tau*(1-tau))
 
@@ -388,7 +388,7 @@ eps <- .Machine$double.eps^(2/3)
 if(any(tau > 1) | any(tau < 0)) stop("Parameter 'tau' must be in [0,1]")
 if (any(tau == 0)) tau[tau == 0] <- eps
 if (any(tau == 1)) tau[tau == 1] <- 1 - eps
-if(sigma < 0) warning("Scale parameter 'sigma' is negative")
+if(any(sigma < 0)) warning("Scale parameter 'sigma' is negative")
 
 sigma^2*(1-2*tau+2*tau^2)/((1-tau)^2*tau^2)
 

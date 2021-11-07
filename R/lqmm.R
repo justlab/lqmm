@@ -349,7 +349,7 @@ if(code == -2) warning(paste(txt, " did not start in: ", fn, ". Check max number
 
 }
 
-"lqmm" <- function(fixed, random, group, covariance = "pdDiag", tau = 0.5, nK = 7, type = "normal", rule = 1, data = sys.frame(sys.parent()), subset, weights, na.action = na.fail, control = list(), contrasts = NULL, fit = TRUE)
+lqmm <- function(fixed, random, group, covariance = "pdDiag", tau = 0.5, nK = 7, type = "normal", rule = 1, data = sys.frame(sys.parent()), subset, weights, na.action = na.fail, control = list(), contrasts = NULL, fit = TRUE)
 {
  
 Call <- match.call()
@@ -530,6 +530,7 @@ fit$revOrder <- revOrder
 fit$weights <- weights
 fit$contrasts <- contr
 fit$group <- grp
+attr(fit$group, "name") <- as.character(groupFormula[[2]])
 fit$ngroups <- ngroups
 fit$QUAD <- QUAD
 fit$type <- type
@@ -539,6 +540,10 @@ fit$control <- control
 fit$cov_name <- cov_name
 #attr(fit$cov_name, "cov_type") <- cov.sel(cov_name)
 fit$mfArgs <- mfArgs
+fit$mtf <- terms(fixed)
+fit$mtr <- terms(random)
+fit$xlevels <- list(fixed = .getXlevels(fit$mtf, mfArgs), random = .getXlevels(fit$mtr, mfArgs))
+
 
 class(fit) <- "lqmm"
 fit
@@ -766,13 +771,48 @@ colnames(ans) <- object$mm;
 return(ans)
 }
 
-predict.lqmm <- function(object, level = 0, ...){
+predict.lqmm <- function(object, newdata, level = 0, na.action = na.pass, ...){
 
 tau <- object$tau
 nq <- length(tau)
+q <- object$dim_theta[2]
+if(!level %in% c(0,1)) stop("level must be either 0 (population-averaged) or 1 (conditional)")
+
+if (!missing(newdata)) {
+	## check newdata
+	if(!inherits(newdata, "data.frame")) stop("'newdata' must be a data frame")
+	if(!all(attributes(object$mtf)$term.labels %in% names(newdata))) stop("newdata must have all terms in 'fixed' formula from main call")
+	if(!all(attributes(object$mtr)$term.labels %in% names(newdata))) stop("newdata must have all terms in 'random' formula from main call")
+
+	## ordering data by groups
+	groupFormula <- asOneSidedFormula(attr(object$group, "name"))
+	grp <- model.frame(groupFormula, newdata)
+	origOrder <- row.names(newdata)
+	ord <- order(unlist(grp, use.names = FALSE))
+	grp <- grp[ord,,drop = TRUE]
+	newdata <- newdata[ord, ,drop = FALSE]
+	revOrder <- match(origOrder, row.names(newdata)) # putting in orig. order
+
+	## create data frames 
+	mtf <- object$mtf
+	mtr <- object$mtr
+	mtf <- delete.response(mtf)
+	mf <- model.frame(formula(mtf), newdata, na.action = na.action, drop.unused.levels = TRUE, xlev = object$xlevels[['fixed']])
+	mr <- model.frame(formula(mtr), newdata, na.action = na.action, drop.unused.levels = TRUE, xlev = object$xlevels[['random']])
+	
+	if (!is.null(cl <- attr(mtf, "dataClasses"))) 
+		.checkMFClasses(cl, mf)
+	if (!is.null(cl <- attr(mtr, "dataClasses"))) 
+		.checkMFClasses(cl, mr)
+	object$mmf <- model.matrix(formula(mtf), mf)
+	object$mmr <- model.matrix(formula(mtr), mr)
+
+	object$group <- grp
+	object$revOrder <- revOrder
+}
 group <- object$group
 M <- object$ngroups
-q <- object$dim_theta[2]
+
 
 if(nq == 1){
   FXD <- object$mmf%*%matrix(object$theta_x)
@@ -781,22 +821,28 @@ if(nq == 1){
 }
 
 if(level == 1){
-  RE <- ranef(object);
-  mmr.l <- split(object$mmr, group)
-  if(nq == 1){
-    RE.l <- split(RE, unique(group));
-    RND <- NULL;
-    for(i in 1:M) {RND <- rbind(RND, matrix(as.numeric(mmr.l[[i]]), ncol = q)%*%matrix(as.numeric(RE.l[[i]]), nrow = q))}
-    } else {
-      RND <- matrix(NA, length(object$y), nq)
-      for(j in 1:nq){
-      RE.l <- split(RE[[j]], unique(group));
-      tmp <- NULL;
-      for(i in 1:M) {tmp <- rbind(tmp, matrix(as.numeric(mmr.l[[i]]), ncol = q)%*%matrix(as.numeric(RE.l[[i]]), nrow = q))}
-      RND[,j] <- tmp
-      }
-    }
-}
+	RE <- ranef(object)
+	mmr.l <- split(object$mmr, group)
+	if(nq == 1){
+		RE.l <- split(RE, unique(group))
+		RND <- NULL
+		for(i in 1:M){
+			u <- as.numeric(RE.l[[match(names(mmr.l)[i], names(RE.l))]])
+			RND <- rbind(RND, matrix(as.numeric(mmr.l[[i]]), ncol = q)%*%matrix(u, nrow = q))
+		} # for i
+	} else {
+		RND <- matrix(NA, length(object$y), nq)
+		for(j in 1:nq){
+			RE.l <- split(RE[[j]], unique(group))
+			tmp <- NULL
+			for(i in 1:M){
+				u <- as.numeric(RE.l[[match(names(mmr.l)[i], names(RE.l))]])
+				tmp <- rbind(tmp, matrix(as.numeric(mmr.l[[i]]), ncol = q)%*%matrix(u, nrow = q))
+			} # for i
+		RND[,j] <- tmp
+		} # for j
+	} # else nq
+} # if level
 
 if(level == 0) {
 	colnames(FXD) <- format(tau, digits = 4)
@@ -807,7 +853,6 @@ if(level == 1) {
 	colnames(ans) <- format(tau, digits = 4)
 	ans <- ans[object$revOrder,]
 	}
-
 return(ans)
 }
 
@@ -896,19 +941,6 @@ ddf <- object$dim_theta[1] - 1
 npars <- object$dim_theta[1] + object$dim_theta_z + 1
 
 coln <- c("Value", "Std. Error", "lower bound", "upper bound", "Pr(>|t|)")
-
-  if(ddf > 0){
-	newF <- update.formula(as.formula(object$call[['fixed']]), as.formula(. ~ 1))
-	FITNULL <- update(object, fixed = as.formula(newF), evaluate = TRUE)
-    LR <- -2*(logLik(FITNULL) - object$logLik);
-    if(any(LR < 0)) {LR[LR < 0] <- 0; warning("Negative LR test (set to zero).")};
-    LRp <- 1 - pchisq(LR, df = ddf);
-    names(LR) <- tau;
-    attr(LR, "pvalue") <- LRp;
-    attr(LR, "df") <- ddf;
-    object$LRtest <- LR;
-    object$null_model <- FITNULL
-  }
 
   if(method == "boot"){
     B <- boot.lqmm(object, ...)

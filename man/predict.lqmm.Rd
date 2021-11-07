@@ -12,18 +12,26 @@ The predictions at level 0 correspond to predictions based only on the fixed eff
 }
 
 \usage{
-\method{predict}{lqmm}(object, level = 0, ...)
-\method{predint}{lqmm}(object, level = 0, alpha = 0.05, R = 50,
-	seed = round(runif(1, 1, 10000)))
+\method{predict}{lqmm}(object, newdata, level = 0,
+	na.action = na.pass, ...)
+\method{predint}{lqmm}(object, level = 0, alpha = 0.05,
+	R = 50, seed = round(runif(1, 1, 10000)))
 }
 
 \arguments{
   \item{object}{
 an \code{lqmm} object.
 }
+  \item{newdata}{
+an optional data frame in which to look for variables with which to predict. If omitted, the fitted values are produced.  
+}
   \item{level}{
 an optional integer vector giving the level of grouping to be used in obtaining the predictions.
 }
+  \item{na.action}{
+function determining what should be done with missing values in \code{newdata}. The default is to predict \code{NA}.
+}
+
   \item{alpha}{
 1-\code{alpha} is the confidence level.  
 }
@@ -40,7 +48,7 @@ not used.
 
 \details{
 
-As discussed by Geraci and Bottai (2014), integrating over the random effects will give "weighted averages" of the cluster-specific quantile effects. These may be interpreted strictly as population regression quantiles only for the median (\code{tau=0.5}). Therefore, predictions at the population level (\code{code=0}) should be interpreted analogously.
+As discussed by Geraci and Bottai (2014), integrating over the random effects will give "weighted averages" of the cluster-specific quantile effects. These may be interpreted strictly as population regression quantiles for the median (\code{tau=0.5}) only. Therefore, predictions at the population level (\code{code=0}) should be interpreted analogously.
 
 }
 
