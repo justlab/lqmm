@@ -1107,7 +1107,7 @@ if(nq == 1){
   fitlist = parallel::mclapply(1:R, do_fits, mc.cores = cores)
 
   for(i in 1:R){
-    bootmat[i,,] <- fitlist[i]
+    bootmat[i,,] <- fitlist[[i]]
   }
 }
 
