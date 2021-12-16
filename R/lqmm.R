@@ -22,11 +22,11 @@ val <- 0;
 	if(type == "pdIdent"){
 		val <- matrix(diag(n), ncol = 1)
 	}
-	
+
 	if(type == "pdDiag"){
 		val <- sapply(1:n, function(x, n) {z <- matrix(0,n,n); z[x,x] <- 1; z}, n = n)
 	}
-	
+
 	if(type == "pdSymm"){
 		val <- apply(diag(n*(n+1)/2), 2, invTfun, n = n, type = type)
 	}
@@ -39,7 +39,7 @@ val <- 0;
 return(val)
 }
 
-"invTfun" <- function(x, n, type = "pdSymm") 
+"invTfun" <- function(x, n, type = "pdSymm")
 {
 
 val <- NULL
@@ -109,26 +109,26 @@ if(rule == 1){
 		QUAD$nodes <- permutations(n = k, r = q, v = QUAD$nodes, set = FALSE, repeats.allowed = TRUE);
 		QUAD$weights <- apply(permutations(n = k, r = q, v = QUAD$weights, set = FALSE, repeats.allowed = TRUE), 1, prod)
 	}
-	   
+
 	if(type == "robust")
 		QUAD <- createLaguerre(rule = "product", q = q, k = k)
-	
+
 } else if(rule == 2){
 
 	if(k > 25) stop("This rule is for k < 25 only")
 
 	if(type == "normal")
 		QUAD <- createSparseGrid(type = "GQN", dimension = q, k = k)
-	
+
 	if(type == "robust")
 		QUAD <- createLaguerre(rule = "sparse", q = q, k = k);
-	
+
 } else if(rule == 3){
 
 	if(k > 25) stop("This rule is for k < 25 only")
-	
+
 	QUAD <- createSparseGrid(type = "KPN", dimension = q, k = k)
-	
+
 	if(type == "robust")
 		warning("Nested rule for integral with Laguerre weights not implemented. Gaussian weights used")
 
@@ -136,7 +136,7 @@ if(rule == 1){
 
 	if(k > 25) stop("This rule is for k < 25 only")
 	rule <- 2
-	
+
 	if(type == "normal"){
 		QUAD <- createSparseGrid(type = "GQN", dimension = q, k = k);
 		if (length(QUAD$weights) > k^q) {
@@ -351,16 +351,16 @@ if(code == -2) warning(paste(txt, " did not start in: ", fn, ". Check max number
 
 lqmm <- function(fixed, random, group, covariance = "pdDiag", tau = 0.5, nK = 7, type = "normal", rule = 1, data = sys.frame(sys.parent()), subset, weights, na.action = na.fail, control = list(), contrasts = NULL, fit = TRUE)
 {
- 
+
 Call <- match.call()
-  
+
 if(any(tau <= 0) | any(tau >= 1)) stop("Quantile index out of range")
 nq <- length(tau)
 
 if(!is.data.frame(data)) stop("`data' must be a data frame")
 if(!(type %in% c("normal","robust"))) stop("type must be either `normal' or `robust'")
 
-  
+
 # check arguments
 if(!inherits(fixed, "formula") || length(fixed) != 3) {
 	stop("\nFixed-effects model must be a formula of the form \"y ~ x\"")
@@ -371,7 +371,7 @@ if(!inherits(random, "formula") || length(random) != 2) {
 
 groupFormula <- asOneSidedFormula(Call[["group"]])
 group <- groupFormula[[2]]
-  
+
 ## extract data frame with all necessary information
 
 mfArgs <- list(formula = asOneFormula(random, fixed, group), data = data, na.action = na.action)
@@ -410,7 +410,7 @@ mmf <- model.frame(fixed, dataMix)
 Terms <- attr(mmf, "terms")
 auxContr <- lapply(mmf, function(el)
 	if (inherits(el, "factor") && length(levels(el)) > 1) contrasts(el))
-	
+
 contr <- c(contr, auxContr[is.na(match(names(auxContr), names(contr)))])
 contr <- contr[!unlist(lapply(contr, is.null))]
 mmf <- model.matrix(fixed, data = mmf)
@@ -418,7 +418,7 @@ mmf <- model.matrix(fixed, data = mmf)
 ## define dimensions
 cov_name <- covariance
 if(type == "robust" & !(cov_name %in% c("pdIdent","pdDiag"))) stop("Gauss-Laguerre quadrature available only for uncorrelated random effects.")
-  
+
 dim_theta <- integer(2)
 dim_theta[1] <- ncol(mmf)
 dim_theta[2] <- ncol(mmr)
@@ -604,7 +604,7 @@ covHandling <- function(theta, n, cov_name, quad_type){
 		}
 	}
 
-return(sigma)	
+return(sigma)
 }
 
 VarCorr.lqmm <- function(x, sigma = NULL, ...){
@@ -670,7 +670,7 @@ if(nq == 1){
   cat(paste("Log-likelihood:", format(x$logLik, digits = digits),"\n"))
   cat(paste("\nNumber of observations:", length(x$y), "\n"))
   cat(paste("Number of groups:", x$ngroups, "\n"))
-  
+
 } else {
   theta_x <- x$theta_x
   colnames(theta_x) <- paste("tau = ", format(tau, digits = digits), sep ="")
@@ -691,7 +691,7 @@ if(nq == 1){
   cat(paste("tau = "), tau[i], "\n", sep = "")
   print.default(format(sigma[[i]], digits = digits), quote = FALSE)
   }
-  
+
   cat("\n")
   cat("Residual scale parameter: ")
   cat(paste(format(Scale, digits = digits), " (tau = ", tau, ") ", sep = ""))
@@ -752,7 +752,7 @@ rownames(ans) <- unique(group);
 colnames(ans) <- object$mm;
 } else {
   ans <- vector("list", nq)
-  for(j in 1:nq){  
+  for(j in 1:nq){
     tmp <- object[[j]];
     psi <- varAL(tmp$scale, tau[j])
     INV <- lapply(mmr.l, function(x, a, b, q) {x <- matrix(x, ncol = q); n <- nrow(x); y <- x%*%a%*%t(x) + diag(b, n); solve(y)},
@@ -793,16 +793,16 @@ if (!missing(newdata)) {
 	newdata <- newdata[ord, ,drop = FALSE]
 	revOrder <- match(origOrder, row.names(newdata)) # putting in orig. order
 
-	## create data frames 
+	## create data frames
 	mtf <- object$mtf
 	mtr <- object$mtr
 	mtf <- delete.response(mtf)
 	mf <- model.frame(formula(mtf), newdata, na.action = na.action, drop.unused.levels = TRUE, xlev = object$xlevels[['fixed']])
 	mr <- model.frame(formula(mtr), newdata, na.action = na.action, drop.unused.levels = TRUE, xlev = object$xlevels[['random']])
-	
-	if (!is.null(cl <- attr(mtf, "dataClasses"))) 
+
+	if (!is.null(cl <- attr(mtf, "dataClasses")))
 		.checkMFClasses(cl, mf)
-	if (!is.null(cl <- attr(mtr, "dataClasses"))) 
+	if (!is.null(cl <- attr(mtr, "dataClasses")))
 		.checkMFClasses(cl, mr)
 	object$mmf <- model.matrix(formula(mtf), mf)
 	object$mmr <- model.matrix(formula(mtr), mr)
@@ -920,7 +920,7 @@ nq <- length(tau)
     for(i in 1:nq) ans <- c(ans, object[[i]]$logLik);
     names(ans) <- as.character(format(tau, digits = 4))
   }
-  
+
 attr(ans, "nobs") <- object$nobs
 attr(ans, "df") <- tdf
 attr(ans, "class") <- "logLik"
@@ -975,9 +975,9 @@ coln <- c("Value", "Std. Error", "lower bound", "upper bound", "Pr(>|t|)")
 		}
 	}
 	if(method == "nid"){
-	
-	
-	
+
+
+
 	}
 if(covariance) object$Cov <- Cov
 object$tTable <- ans
@@ -1020,7 +1020,7 @@ cat("AIC:\n")
   )
 }
 
-boot.lqmm <- function(object, R = 50, seed = round(runif(1, 1, 10000)), startQR = FALSE){
+boot.lqmm <- function(object, R = 50, seed = round(runif(1, 1, 10000)), startQR = FALSE, cores = getOption('mc.cores', 2L)){
 
 if(startQR) warning("Standard errors may be underestimated when 'startQR = TRUE'")
 
@@ -1057,7 +1057,7 @@ if(nq == 1){
     sel_unique <- group_unique%in%names(group_freq);
     w <- rep(0, ngroups); w[sel_unique] <- group_freq;
     FIT_ARGS$weights <- w;
-	
+
 	if(!startQR){
 		lmfit <- lm.wfit(x = as.matrix(object$mmf), y = object$y, w = rep(w, table(group_all)))
 		theta_x <- lmfit$coefficients
@@ -1076,31 +1076,38 @@ if(nq == 1){
 
   bootmat <- array(NA, dim = c(R, npars, nq), dimnames = list(NULL, dimn, paste("tau = ", format(tau, digits = 4), sep ="")));
 
-  for(i in 1:R){
+  do_fits <- function(i){
+    bootmat_i <- array(NA, dim = c(npars, nq), dimnames = list(dimn, paste("tau = ", format(tau, digits = 4), sep ="")));
+
     group_freq <- table(obsS[,i]);
     sel_unique <- group_unique%in%names(group_freq);
     w <- rep(0, ngroups); w[sel_unique] <- group_freq;
     FIT_ARGS$weights <- w;
     for (j in 1:nq){
-		
-		if(startQR){
-			FIT_ARGS$theta_0 <- object[[j]]$theta;  
-			FIT_ARGS$sigma_0 <- object[[j]]$scale
-		} else {
-			lmfit <- lm.wfit(x = as.matrix(object$mmf), y = object$y, w = rep(w, table(group_all)))
-			theta_x <- lmfit$coefficients
-			theta_z <- if(object$type == "normal")
-				rep(1, dim_theta_z) else rep(invvarAL(1, 0.5), dim_theta_z)
-			FIT_ARGS$theta_0 <- c(theta_x, theta_z)
-			FIT_ARGS$sigma_0 <- invvarAL(mean(lmfit$residuals^2), 0.5)
-		}
+  		if(startQR){
+  			FIT_ARGS$theta_0 <- object[[j]]$theta;
+  			FIT_ARGS$sigma_0 <- object[[j]]$scale
+  		} else {
+  			lmfit <- lm.wfit(x = as.matrix(object$mmf), y = object$y, w = rep(w, table(group_all)))
+  			theta_x <- lmfit$coefficients
+  			theta_z <- if(object$type == "normal")
+  				rep(1, dim_theta_z) else rep(invvarAL(1, 0.5), dim_theta_z)
+  			FIT_ARGS$theta_0 <- c(theta_x, theta_z)
+  			FIT_ARGS$sigma_0 <- invvarAL(mean(lmfit$residuals^2), 0.5)
+  		}
 
-		FIT_ARGS$tau <- object$tau[j];
+  		FIT_ARGS$tau <- object$tau[j];
 
-		if(control$method == "gs") fit <- try(do.call(lqmm.fit.gs, FIT_ARGS));
-		if(control$method == "df") fit <- try(do.call(lqmm.fit.df, FIT_ARGS));
-		if(!inherits(fit, "try-error")) bootmat[i,,j] <- c(fit$theta , fit$scale)
+  		if(control$method == "gs") fit <- try(do.call(lqmm.fit.gs, FIT_ARGS));
+  		if(control$method == "df") fit <- try(do.call(lqmm.fit.df, FIT_ARGS));
+  		if(!inherits(fit, "try-error")) bootmat_i[,j] <- c(fit$theta , fit$scale)
     }
+    bootmat_i
+  }
+  fitlist = parallel::mclapply(1:R, do_fits, mc.cores = cores)
+
+  for(i in 1:R){
+    bootmat[i,,] <- fitlist[i]
   }
 }
 
@@ -1138,7 +1145,7 @@ ind.s <- dim_theta[1] + dim_theta_z + 1
       ans <- object[,c(ind.f,ind.s),]
     }
   }
-  
+
   if(which == "random"){
     if(nq == 1){
       ans <- as.matrix(object[,ind.r])
@@ -1146,7 +1153,7 @@ ind.s <- dim_theta[1] + dim_theta_z + 1
       ans <- object[,ind.r,]
     }
   }
-  
+
 return(ans)
 
 
@@ -1161,7 +1168,7 @@ nq <- length(tau)
 nn <- attr(object, "nn")
 npars <- attr(object, "npars")
 coln <- c("Value", "Std. Error", "lower bound", "upper bound", "Pr(>|t|)")
-		
+
 if(nq == 1){
   Cov <- cov(as.matrix(object))
   stds <- sqrt(diag(Cov))
@@ -1200,7 +1207,7 @@ nq <- length(object$tau)
 
 dim_theta_z <- object$dim_theta_z
 dimn <- c(object$nn, paste("reStruct", 1:dim_theta_z, sep=""), "scale")
-  
+
   if(nq == 1){
   ans <- c(object$theta, object$scale);
   names(ans) <- dimn
