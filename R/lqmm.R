@@ -1020,7 +1020,7 @@ cat("AIC:\n")
   )
 }
 
-boot.lqmm <- function(object, R = 50, seed = round(runif(1, 1, 10000)), startQR = FALSE){
+boot.lqmm <- function(object, R = 50, seed = round(runif(1, 1, 10000)), startQR = FALSE, cores = getOption('mc.cores', 2L)){
 
 if(startQR) warning("Standard errors may be underestimated when 'startQR = TRUE'")
 
@@ -1052,7 +1052,7 @@ if(nq == 1){
   bootmat <- matrix(NA, R, npars);
   colnames(bootmat) <- dimn
 
-  for(i in 1:R){
+  do_fits_mat <- function(i){
     group_freq <- table(obsS[,i]);
     sel_unique <- group_unique%in%names(group_freq);
     w <- rep(0, ngroups); w[sel_unique] <- group_freq;
@@ -1070,13 +1070,26 @@ if(nq == 1){
 
 	if(control$method == "gs") fit <- try(do.call(lqmm.fit.gs, FIT_ARGS), silent = TRUE)
 	if(control$method == "df") fit <- try(do.call(lqmm.fit.df, FIT_ARGS), silent = TRUE)
-    if(!inherits(fit, "try-error")) bootmat[i,] <- c(fit$theta , fit$scale)
+        if(!inherits(fit, "try-error")){
+          c(fit$theta , fit$scale)
+        } else {
+          NULL
+        }
+      }
+  fitlist = parallel::mclapply(1:R, do_fits_mat, mc.cores = cores)
+
+  for(i in 1:R){
+    if(!is.null(fitlist[[i]])){
+      bootmat[i,] <- fitlist[[i]]
+    }
   }
 } else {
 
   bootmat <- array(NA, dim = c(R, npars, nq), dimnames = list(NULL, dimn, paste("tau = ", format(tau, digits = 4), sep ="")));
 
-  for(i in 1:R){
+  do_fits_arr <- function(i){
+    bootmat_i <- array(NA, dim = c(npars, nq), dimnames = list(dimn, paste("tau = ", format(tau, digits = 4), sep ="")));
+
     group_freq <- table(obsS[,i]);
     sel_unique <- group_unique%in%names(group_freq);
     w <- rep(0, ngroups); w[sel_unique] <- group_freq;
@@ -1099,8 +1112,14 @@ if(nq == 1){
 
 		if(control$method == "gs") fit <- try(do.call(lqmm.fit.gs, FIT_ARGS), silent = TRUE);
 		if(control$method == "df") fit <- try(do.call(lqmm.fit.df, FIT_ARGS), silent = TRUE);
-		if(!inherits(fit, "try-error")) bootmat[i,,j] <- c(fit$theta , fit$scale)
+		if(!inherits(fit, "try-error")) bootmat_i[,j] <- c(fit$theta , fit$scale)
     }
+    bootmat_i
+  }
+  fitlist = parallel::mclapply(1:R, do_fits_arr, mc.cores = cores)
+
+  for(i in 1:R){
+    bootmat[i,,] <- fitlist[[i]]
   }
 }
 
