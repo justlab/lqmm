@@ -1,19 +1,22 @@
 /*
-Estimation of linear quantile models and linear quantile mixed models (ver 1.5), Marco Geraci, University College London.
+Estimation of linear quantile models and linear quantile mixed models (ver 1.6), Marco Geraci, University College London.
 
 This suite of routines is part of the R package lqmm. The models stem from the work by Geraci (Ph.D. Dissertation, University of Florence, 2005), Geraci and Bottai ("Quantile regression for longitudinal data using the asymmetric Laplace distribution", Biostatistics 8, 2007) and Geraci and Bottai ("Linear quantile mixed models", Statistics and Computing, 2014) in which the asymmetric Laplace likelihood is linked to the estimation of conditional quantiles of a response variable given covariates and cluster-specific random effects. The estimation of its parameters entails unconstrained maximization of a concave and nondifferentiable function over the real space. The algorithm is based on the gradient of the log-likelihood that generates a finite sequence of parameter values along which the likelihood increases. 
 
 Acknowledgements: contributions to the function 'll_i' by Matteo Bottai (Karolinska Institutet).
 
 */
-
+#define USE_FC_LEN_T
 #include <R.h>
 #include <Rinternals.h>
 #include <Rmath.h>
+#include <R_ext/RS.h>
 #include <R_ext/Applic.h>
 #include <R_ext/Lapack.h>
 #include <R_ext/BLAS.h>
-#include <R_ext/RS.h>
+#ifndef FCONE
+#define FCONE
+#endif
 
 double MIN(double x[], int length)
 {
@@ -73,7 +76,7 @@ double ll_i(double *theta, double *x, double *y, float *quantile, int *N, int *p
 	// resid <-  y
 	F77_CALL(dcopy)(N, y, &inc, resid, &inc);
 	// resid <- resid - X%*%theta
-	F77_CALL(dgemv)(transn, N, p, &alpha, x, N, theta, &inc, &beta, resid, &inc);
+	F77_CALL(dgemv)(transn, N, p, &alpha, x, N, theta, &inc, &beta, resid, &inc FCONE);
    
 	for (i = 0; i < (*N); i++){
 		if (resid[i] < 0)
@@ -84,7 +87,7 @@ double ll_i(double *theta, double *x, double *y, float *quantile, int *N, int *p
 	}
 	// deriv <- -t(X)%*%I (p times 1)
 	beta = 0.0;
-	F77_CALL(dgemv)(transt, N, p, &alpha, x, N, I, &inc, &beta, deriv, &inc);
+	F77_CALL(dgemv)(transt, N, p, &alpha, x, N, I, &inc, &beta, deriv, &inc FCONE);
 
 	return ans;
 }
